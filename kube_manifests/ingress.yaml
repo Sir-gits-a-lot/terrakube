@@ -3,11 +3,10 @@ kind: Ingress
 metadata:
   name: primary-ingress
   annotations:
-    nginx.ingress.kubernetes.io/canary: "true"         # Enable canary.
-    nginx.ingress.kubernetes.io/canary-weight: "75"
+    kubernetes.io/elb.port: '80'
 spec:
   rules:
-  - host: www.blue-green.io
+  - host: blue-green.com
     http:
       paths:
       - path: /
@@ -27,9 +26,10 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/canary: "true"
     nginx.ingress.kubernetes.io/canary-weight: "25"
+    kubernetes.io/elb.port: '80'
 spec:
   rules:
-  - host: www.blue-green.io
+  - host: blue-green.com
     http:
       paths:
       - path: /
