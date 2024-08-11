@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: primary-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"         # Enable canary.
+    nginx.ingress.kubernetes.io/canary-weight: "75"
+spec:
+  rules:
+  - host: www.blue-green.io
+    http:
+      paths:
+      - path: /
+        backend:
+          service:
+            name: blue-app
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+  ingressClassName: nginx
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "25"
+spec:
+  rules:
+  - host: www.blue-green.io
+    http:
+      paths:
+      - path: /
+        backend:
+          service:
+            name: green-app
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+  ingressClassName: nginx 
