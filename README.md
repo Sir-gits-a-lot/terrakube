@@ -39,11 +39,29 @@ terraform init
 terraform plan -out=tfplan
 terraform apply tfplan
 
+9. To access the service, first fetch the IP Address of the ingress
 
-9. Access the services by making curl requests
+kubectl get ingress
 
-curl -H "Host: www.example.io"  http://<EXTERNAL_IP>
+10. Copy the Address, Open DNS entry file
 
-10. After the verification of all the resources, remember to destroy them
+sudo vi /etc/hosts
+
+Add an entry:-
+<IP Address>  www.example.io
+
+11. Access the services by making curl requests
+
+for i in {1..20}; do curl www.example.io; done;
+
+12. After the verification of all the resources, remember to destroy them
 
 terraform destroy
+
+** The canary weighted-ingress doesn't work for more than 2 services. It is not supported by nginx from what I could explore. For more than two service, Service Mesh pattern can be used.
+
+Reference:- 
+
+1. https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#canary
+
+![canary known limitation canary](image.png)

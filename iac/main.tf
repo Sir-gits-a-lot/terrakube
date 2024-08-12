@@ -73,31 +73,62 @@ resource "kubernetes_service_v1" "app" {
   }
 }
 
-
-resource "kubernetes_ingress_v1" "canary" {
-for_each = { for app in local.applications : app.name => app if app.traffic_weight != "100" }
+resource "kubernetes_ingress_v1" "primary" {
+for_each = { for app in slice(local.applications, 0, 1) : app.name => app if app.traffic_weight != "100" }
 
 metadata {
-    name        = "canary-ingress-${each.key}"
+    name        = "primary-ingress-${each.key}"
     annotations = {
-    "nginx.ingress.kubernetes.io/canary": "true" 
-    "nginx.ingress.kubernetes.io/canary-weight" = each.value.traffic_weight
     "kubernetes.io/elb.port": "80"
-    "nginx.ingress.kubernetes.io/rewrite-target": "/"
     }
 }
 
 spec {
   ingress_class_name = "nginx"
     
-    default_backend {
-      service {
-        name = each.value.name
-        port {
-          number = 80
+  rule {
+      host = "www.example.io"
+      http {
+        path {
+          path = "/"
+          backend {
+            service {
+              name = each.value.name
+              port {
+                number = 80
+              }
+            }
+          }
         }
       }
-    }  
+    }
+  }
+}
+
+resource "kubernetes_ingress_v1" "canary" {
+for_each = { for app in slice(local.applications, 1, length(local.applications)) : app.name => app if app.traffic_weight != "100" }
+
+metadata {
+    name        = "canary-ingress-${each.key}"
+    annotations = {
+    "nginx.ingress.kubernetes.io/canary": "true" 
+    "nginx.ingress.kubernetes.io/canary-weight" = each.value.traffic_weight
+    "nginx.ingress.kubernetes.io/canary-by": "weight"
+    "kubernetes.io/elb.port": 80
+    }
+}
+
+spec {
+  ingress_class_name = "nginx"
+    
+    # default_backend {
+    #   service {
+    #     name = each.value.name
+    #     port {
+    #       number = 80
+    #     }
+    #   }
+    # }  
     
   rule {
       host = "www.example.io"
